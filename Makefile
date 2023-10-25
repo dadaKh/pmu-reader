@@ -1,18 +1,20 @@
 pmu = $(wildcard ./libpmu/pmu.c)
-CC = gcc -O0  $(pmu)
+CC = gcc $(pmu)
 SOURCES := $(wildcard *.c)
 BINARIES := $(SOURCES:%.c=%)
 
-all:$(BINARIES)
-	cd pmc-enable-cr4 && make
+all: $(BINARIES)
 
-enable:
-	cd pmc-enable-cr4 && sudo insmod enable_pmc.ko
+enable_x86:
+	cd x86-pmu-enable && make && sudo insmod pmu_enable.ko
 
-unable:
-	cd pmc-enable-cr4 && sudo rmmod enable_pmc
+enable_arm:
+	cd arm-pmu-enable && make && sudo insmod pmu_enable.ko
 
 clean:
 	rm -f $(BINARIES)
-	cd pmc-enable-cr4 && make clean
+	cd arm-pmu-enable && make clean
+	cd x86-pmu-enable && make clean
+	sudo rmmod pmu_enable
+
 	

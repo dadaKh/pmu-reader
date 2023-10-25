@@ -5,11 +5,15 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/syscall.h>
-#define AMD 0
+
+#if defined(__x86_64__)
 #define INTEL 1
+#define AMD 0
+
 #define NUMBER_OF_PROGRAMMABLE_PMCs 1
 
-#define READ_PMC(pmuvalue, lo, hi) \
+// macro definition for rdpmc
+#define READ_x86_PMC(pmuvalue, lo, hi) \
     __asm__ volatile(                           \
         "mfence\n\t"                            \
         "rdpmc\n\t"                             \
@@ -29,23 +33,30 @@ typedef struct
 * core : logical core number
 * event_code: 
 */
-void setup_pmc(int core, uint64_t event_code);
+void pmu_x86_setup_pmc(int core, uint64_t event_code);
 
 // Clean the PMC value
-void zero_pmc();
+void pmu_x86_zero_pmc();
 
 // Start PMC
-void start_pmc();
+void pmu_x86_start_pmc();
 
 // Stop PMC
-void stop_pmc();
+void pmu_x86_stop_pmc();
 
 // rdpmc
 // faster than get_stats
-uint64_t readPMC();
+uint64_t pmu_x86_readPMC();
 
 // get PMC stats
-void get_stats(int64_t *ctrs);
+void pmu_x86_get_stats(int64_t *ctrs);
 
+#elif defined(__aarch64__)
+void pmu_arm_init(uint64_t event_code, int counter);
 
+void pmu_arm_exit();
+
+uint64_t pmu_arm_read_pmc(int counter);
+
+#endif
 #endif

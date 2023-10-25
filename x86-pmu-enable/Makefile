@@ -1,4 +1,4 @@
-obj-m += enable_pmc.o
+obj-m += pmu_enable.o
 
 PWD := $(shell pwd)
 KDIR := /usr/src/linux-headers-$(shell uname -r)

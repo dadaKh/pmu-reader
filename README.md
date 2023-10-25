@@ -1,60 +1,47 @@
-### Build
+## PMU reader for linux
+
+### x86
+#### How to use it？
+Load MSR mod
+```shell
+sudo modprobe msr
+```
+Make
+```shell
+make enable_x86
+```
+Test
+```
+sudo taskset -c [core] ./demo [core] [event] 
+```
+
+Example:
+```shell
+> sudo taskset -c 1 ./demo 1 0x10a3
+Hexcode: 0x4110a3
+do something!
+PMU Value: 7216
+```
+
+### ARM
+```shell
+make enable_arm
+```
+Test
 ```
 make
+./demo [event1] [event2] [event3] [event4] [event5] [event6]
 ```
-At this point, the Linux file pointer can be used to set the MSR register, but due to the use of system calls, the speed is slower
-
-`pmu.h`
-```c
-// macro definition for rdpmc
-#define READ_PMC(pmuvalue, lo, hi) \
-    __asm__ volatile(                           \
-        "mfence\n\t"                            \
-        "rdpmc\n\t"                             \
-        : "=a"(lo), "=d"(hi)                    \
-        : "c"(0x0));                       \
-    pmuvalue = ((uint64_t)hi << 32 | lo);
-
-// Bind PMU events to the MSR(IA32_PERFEVTSELi) register of the core
-/*
-* core : logical core number
-* event_code: Event Code 
-*/
-void setup_pmc(int core, uint64_t event_code);
-
-// set zero to pmc
-void zero_pmc();
-
-// Start Counter
-void start_pmc();
-
-// Stop Counter
-void stop_pmc();
-
-// rdpmc
-// faster than get_stats
-uint64_t readPMC();
-
-// get PMC stats
-void get_stats(int64_t *ctrs);
-```
-
-
-### ENABLE RDPMC
+Example:
 ```shell
-make enable
-```
-Test:
-```shell
-sudo taskset -c 1 ./demo 1 0xff89
-```
-+ arg[1] is the logical core number, same as the `taskset -c`
-+ arg[2] is the event code you want read
+**********  start  **********
 
+do something
 
-### EXIT
-```shell
-make unable
+**********   end   **********
 
-make clean
+start: 631, end: 642
+start: 10469, end: 10475
 ```
+
+####
