@@ -10,8 +10,7 @@
 #if defined(__x86_64__)
 int msr_fd;
 // Programmable PMCs 
-counter programmables[4];
-size_t n_programmables = NUMBER_OF_PROGRAMMABLE_PMCs;
+counter programmables[NUMBER_OF_PROGRAMMABLE_PMCs];
 
 void write_to_IA32_PERFEVTSELi(int i, uint64_t val)
 {
@@ -49,20 +48,26 @@ void write_to_IA32_PERF_GLOBAL_CTRL(uint64_t val)
 
 
 // setup pmu_hexcode to msr
-void pmu_x86_setup_pmc(int core, uint64_t event_code) {
+void pmu_x86_setup_pmc(int core, uint64_t *event_code, int n) {
 	char *msr_path;
 	msr_path = (char *)malloc(sizeof(char)*16);
 	sprintf(msr_path,"/dev/cpu/%d/msr",core);     
 	msr_fd = open(msr_path, O_RDWR);
+
+	if (n > NUMBER_OF_PROGRAMMABLE_PMCs) {
+		printf("Too many event!\n");
+		exit(0);
+	}
 
 	/* DISABLE ALL COUNTERS */                                         
 	write_to_IA32_PERF_GLOBAL_CTRL(0ull);
   
 	/* PROGRAM ALL PMCs */                                                  
 	unsigned i;
-	for (i = 0; i < n_programmables; i++)  {  
-		programmables[i].hexcode = event_code;
-		write_to_IA32_PERFEVTSELi(i, programmables[i].hexcode); 
+	for (i = 0; i < n; i++)  {  
+		// programmables[i].hexcode = event_code[i];
+		// write_to_IA32_PERFEVTSELi(i, programmables[i].hexcode); 
+		write_to_IA32_PERFEVTSELi(i, event_code[i]);
 	}
 	lseek(msr_fd, 0x38F, SEEK_SET);
 }
@@ -84,27 +89,36 @@ uint64_t read_IA32_PMCi(int i){
 }
 
 
-void pmu_x86_get_stats(int64_t *ctrs){
+void pmu_x86_get_stats(int64_t *ctrs, int n){
 	unsigned i;
-	for(i = 0; i < n_programmables; i++)
+
+	if (n > NUMBER_OF_PROGRAMMABLE_PMCs) {
+		printf("Too many event!\n");
+		exit(0);
+	}
+
+
+	for(i = 0; i < n; i++)
 		ctrs[i] = read_IA32_PMCi(i);
 }
 
 
-void pmu_x86_zero_pmc();
+void pmu_x86_zero_pmc(int n);
 
-inline void pmu_x86_zero_pmc(){
-	unsigned i;
-	for(i = 0; i < n_programmables; i++)   
-		write_to_IA32_PMCi(i, 0ull);   
+inline void pmu_x86_zero_pmc(int n){
+	if (n > NUMBER_OF_PROGRAMMABLE_PMCs) {
+		printf("Target counter is out of index!\n");
+		exit(0);
+	}
+	write_to_IA32_PMCi(n, 0ull);
 }
 
-uint64_t pmu_x86_readPMC(){
+uint64_t pmu_x86_readPMC(int c){
 	uint64_t lo,hi;
 	uint64_t pmc_value;
 	asm volatile ("rdpmc" 
 		: "=a" (lo), "=d" (hi) 
-		: "c"(0x0)
+		: "c"(c)
 		: );
 	pmc_value = ((uint64_t)hi << 32 | lo);
 	return pmc_value;

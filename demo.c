@@ -6,45 +6,72 @@
 int main(int argc,char *argv[]){
 #if defined(__x86_64__)
     int core;
-    uint64_t event_hexcode;
-
-
     if(argc >= 2){
         core = strtoul(argv[1],NULL,0);
     }else{
         printf("Target Core Error!\n");
         exit(0);
     }
+
+    int n = 0;
+
     if(argc >= 3){
-        event_hexcode = strtoull(argv[2], NULL, 0);
+        n =  argc - 2;
     }else{
-        printf("Target Event Code Error!\n");
+        printf("Please input your events!\n");
         exit(0);
     }
-     
-    // USR-bit and EN-bit enable
-    uint64_t hexcode = 0x410000|event_hexcode;
-	printf("Hexcode: 0x%lx\n", hexcode);
-    int64_t pmuvalue;
-    uint32_t lo,hi;
-    uint32_t pmu_value_s, pmu_value_e;
 
-	pmu_x86_setup_pmc(core,hexcode);
-    pmu_x86_zero_pmc();
+    printf(" %d\n",n);
+    if (n > NUMBER_OF_PROGRAMMABLE_PMCs) {
+        printf("Too many event!\n");
+        exit(0);
+    }else if(n == 0){
+        printf("No event!\n");
+        exit(0);
+    }
+    uint64_t event_hexcode[n];
+
+    for(int i = 0; i < n; i++){
+        event_hexcode[i] = strtoull(argv[i+2], NULL, 0);
+        printf("Event Code 0x%lx\t was Initialed\n", event_hexcode[i]);
+        // USR-bit and EN-bit enable
+        event_hexcode[i] = event_hexcode[i] | 0x410000;
+    }
+    uint64_t pmuvalue[n];
+    uint32_t lo,hi;
+    uint32_t pmu_value_s[n], pmu_value_e[n];
+
+	pmu_x86_setup_pmc(core, event_hexcode, n);
+    for (int i = 0 ; i < n; i++){
+        pmu_x86_zero_pmc(i);
+    }
+
     pmu_x86_start_pmc();
     // readPMC
-    // pmu_value_s = readPMC();
-    READ_x86_PMC(pmu_value_s,lo,hi);
+    for (int i = 0 ; i < n; i++){
+        pmu_value_s[i] = pmu_x86_readPMC(i);
+        // READ_x86_PMC(pmu_value_s[i],lo,hi,i);
+    }
 
     // make some differences
     int test = 0;
     test++;
     printf("do something!\n");
 
-    READ_x86_PMC(pmu_value_e,lo,hi);
-    pmuvalue = pmu_value_e - pmu_value_s;
-    
-    printf("PMU Value: %ld\n",pmuvalue);
+
+    // readPMC
+    for (int i = 0 ; i < n; i++){
+        pmu_value_e[i] = pmu_x86_readPMC(i);
+        // READ_x86_PMC(pmu_value_e[i],lo,hi,i);
+    }
+    pmu_x86_stop_pmc();
+    for(int i = 0; i < n; i++){
+        pmuvalue[i] = pmu_value_e[i] - pmu_value_s[i];
+        printf("Event: 0x%lx        PMU Value: %ld\n",event_hexcode[i],pmuvalue[i]);
+
+    }
+
     return 0;
 #elif defined(__aarch64__)
 

@@ -12,15 +12,22 @@ make enable_x86
 ```
 Test
 ```
-sudo taskset -c [core] ./demo [core] [event] 
+sudo taskset -c [core] ./demo [core] [event1] [event2] [event3] ... 
 ```
 
 Example:
 ```shell
-> sudo taskset -c 1 ./demo 1 0x10a3
-Hexcode: 0x4110a3
+> sudo taskset -c 1 ./demo 1 0x10e6 0xc189 0xff89
+Event Code 0x10e6 was Initialed
+Event Code 0xc189 was Initialed
+Event Code 0xff89 was Initialed
+
+
 do something!
-PMU Value: 7216
+
+Event: 0x4110e6        PMU Value: 0
+Event: 0x41c189        PMU Value: 19
+Event: 0x41ff89        PMU Value: 26
 ```
 
 ### ARM
