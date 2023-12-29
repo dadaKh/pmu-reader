@@ -22,7 +22,6 @@ int main(int argc,char *argv[]){
         exit(0);
     }
 
-    printf(" %d\n",n);
     if (n > NUMBER_OF_PROGRAMMABLE_PMCs) {
         printf("Too many event!\n");
         exit(0);
@@ -34,7 +33,7 @@ int main(int argc,char *argv[]){
 
     for(int i = 0; i < n; i++){
         event_hexcode[i] = strtoull(argv[i+2], NULL, 0);
-        printf("Event Code 0x%lx\t was Initialed\n", event_hexcode[i]);
+        printf("Event Code 0x%lx was Initialed\n", event_hexcode[i]);
         // USR-bit and EN-bit enable
         event_hexcode[i] = event_hexcode[i] | 0x410000;
     }
@@ -57,7 +56,7 @@ int main(int argc,char *argv[]){
     // make some differences
     int test = 0;
     test++;
-    printf("do something!\n");
+    printf("\n\ndo something!\n\n");
 
 
     // readPMC
@@ -74,8 +73,7 @@ int main(int argc,char *argv[]){
 
     return 0;
 #elif defined(__aarch64__)
-
-    // default event code
+  // default event code
     uint64_t event_code0 = 0x01, event_code1 = 0x14;
     pmu_arm_init(event_code0, 0);
     pmu_arm_init(event_code1, 1);
@@ -98,16 +96,27 @@ int main(int argc,char *argv[]){
     }
 
     printf("**********  start  **********\n\n");
-    uint64_t c1, c2, c3, c4;
-    c1 = pmu_arm_read_pmc(0);
-    c3 = pmu_arm_read_pmc(1);
+    uint64_t s[event_num];
+    uint64_t e[event_num];
+
+    for (int i = 0; i < event_num; i++)
+    {
+        s[i] = pmu_arm_read_pmc(i);
+    }
     printf("do something\n\n");
-    c2 = pmu_arm_read_pmc(0);
-    c4 = pmu_arm_read_pmc(1);
+    for (int i = 0; i < event_num; i++)
+    {
+        e[i] = pmu_arm_read_pmc(i);
+    }
+ 
+
    
     printf("**********   end   **********\n\n");
-    printf("start: %ld, end: %ld\n", c1, c2);
-    printf("start: %ld, end: %ld\n", c3, c4);
+
+    for(int i = 0; i < event_num; i++){
+        printf("Event Code 0x%lx\t:%ld\n", event_code[i],e[i]-s[i]);
+    }    
+
 #endif
 }
 
