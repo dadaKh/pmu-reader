@@ -8,7 +8,7 @@ sudo modprobe msr
 ```
 Make
 ```shell
-make enable_x86
+make && make enable_x86
 ```
 Test
 ```
