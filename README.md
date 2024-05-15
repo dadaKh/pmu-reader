@@ -35,7 +35,7 @@ make && make enable_arm
 ```
 Test
 ```
-./demo [core] [event1] [event2] [event3] [event4]
+./demo [event1] [event2] [event3] [event4]
 ``` 
 
 Example:
